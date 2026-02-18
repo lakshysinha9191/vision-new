@@ -3,451 +3,117 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Vision Pro AI - Advanced</title>
-
-  <!-- TensorFlow.js + Models -->
+  <title>Vision Pro AI | Enterprise Edition</title>
+  
+  <!-- External Styles -->
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- TensorFlow.js & Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
-  <!-- Tesseract.js for OCR (Text Reading) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-
-  <style>
-    :root {
-      --bg-color: #050507;
-      --surface-color: rgba(20, 20, 25, 0.7);
-      --surface-border: rgba(255, 255, 255, 0.1);
-      
-      --primary: #00f2ff;
-      --secondary: #7000ff;
-      --accent: #ff0055;
-      --success: #00ff9d;
-      --text-main: #ffffff;
-      --text-muted: #94a3b8;
-      --font-main: 'Inter', system-ui, sans-serif;
-      --font-mono: 'JetBrains Mono', monospace;
-    }
-
-    * { box-sizing: border-box; outline: none; }
-    
-    body {
-      margin: 0;
-      background-color: var(--bg-color);
-      color: var(--text-main);
-      font-family: var(--font-main);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      overflow-x: hidden;
-    }
-
-    header {
-      width: 100%;
-      padding: 16px 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: rgba(5, 5, 7, 0.9);
-      border-bottom: 1px solid var(--surface-border);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    
-    .brand { font-weight: 700; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
-    .brand-icon { width: 10px; height: 10px; background: var(--primary); border-radius: 50%; box-shadow: 0 0 10px var(--primary); }
-
-    main {
-      width: 100%;
-      max-width: 900px;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    /* Camera View */
-    .camera-wrapper {
-      position: relative;
-      width: 100%;
-      border-radius: 16px;
-      overflow: hidden;
-      background: #000;
-      border: 1px solid var(--surface-border);
-      box-shadow: 0 20px 50px -10px rgba(0,0,0,0.8);
-    }
-
-    video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    canvas {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 10;
-    }
-
-    /* Controls */
-    .panel {
-      background: var(--surface-color);
-      backdrop-filter: blur(20px);
-      border: 1px solid var(--surface-border);
-      border-radius: 16px;
-      padding: 20px;
-    }
-
-    .btn {
-      background: linear-gradient(135deg, var(--secondary), var(--primary));
-      color: #fff;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.1s;
-      margin-right: 10px;
-      margin-bottom: 10px;
-    }
-    .btn:active { transform: scale(0.96); }
-    .btn.ghost { background: rgba(255,255,255,0.1); border: 1px solid var(--surface-border); }
-
-    .data-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 15px;
-      margin-top: 15px;
-    }
-    
-    @media (max-width: 600px) {
-      .data-grid { grid-template-columns: 1fr; }
-    }
-
-    .data-card {
-      background: rgba(0,0,0,0.3);
-      padding: 15px;
-      border-radius: 12px;
-      border-left: 3px solid var(--primary);
-    }
-    .data-card h4 { margin: 0 0 8px 0; color: var(--primary); font-size: 0.9rem; text-transform: uppercase; }
-    .data-card p { margin: 0; color: var(--text-main); font-family: var(--font-mono); font-size: 1.1rem; }
-    .data-card span { font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 4px; }
-
-    #log {
-      height: 150px;
-      overflow-y: auto;
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      background: rgba(0,0,0,0.2);
-      padding: 10px;
-      border-radius: 8px;
-    }
-    .log-entry { margin-bottom: 4px; }
-    .log-highlight { color: var(--success); }
-
-  </style>
 </head>
 
 <body>
-  <header>
-    <div class="brand">
-      <div class="brand-icon"></div>
-      VISION PRO AI +
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="branding">
+      <div class="logo-icon"></div>
+      <h1>Vision Pro AI</h1>
+      <span class="version-tag">v2.0 Enterprise</span>
     </div>
-    <div style="font-size: 0.8rem; color: var(--text-muted);" id="statusBar">System Initialized</div>
+    <div class="status-bar" id="statusBar">
+      <span class="status-dot"></span>
+      <span id="statusText">System Offline</span>
+    </div>
   </header>
 
-  <main>
-    <!-- Camera Viewport -->
-    <section class="camera-wrapper" id="camBox">
-      <video id="video" autoplay playsinline muted></video>
-      <canvas id="overlay"></canvas>
+  <!-- MAIN APPLICATION -->
+  <main class="container">
+    
+    <!-- VIDEO FEED SECTION -->
+    <section class="video-container" id="videoContainer">
+      <video id="videoElement" autoplay playsinline muted></video>
+      <canvas id="overlayCanvas"></canvas>
       
-      <!-- Start Overlay -->
-      <div id="startOverlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.8); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:20;">
-        <h2 style="margin-bottom:10px;">Advanced Vision AI</h2>
-        <p style="color:var(--text-muted); margin-bottom:20px; text-align:center; max-width:300px;">Features: Object Detection, Text Reading (OCR), Distance Measurement.</p>
-        <button class="btn" id="btnStart">Start System</button>
-      </div>
-    </section>
-
-    <!-- Controls -->
-    <section class="panel">
-      <div style="display:flex; flex-wrap:wrap;">
-        <button class="btn ghost" id="btnScan">Scan Once</button>
-        <button class="btn ghost" id="btnVision">Auto Vision: OFF</button>
-        <button class="btn ghost" id="btnMute">Audio: ON</button>
-      </div>
-
-      <div class="data-grid">
-        <div class="data-card">
-          <h4>Object Detected</h4>
-          <p id="objName">None</p>
-          <span id="objDist">Distance: --</span>
-        </div>
-        <div class="data-card" style="border-left-color: var(--success);">
-          <h4>Text Read (OCR)</h4>
-          <p id="textRead" style="font-size: 0.9rem; word-break:break-all;">Waiting...</p>
-          <span>Confidence: --</span>
+      <!-- SYSTEM START OVERLAY -->
+      <div class="init-overlay" id="initOverlay">
+        <div class="init-content">
+          <h2>System Initialization</h2>
+          <p>Initializing TensorFlow.js and COCO-SSD models. Please grant camera permissions when prompted.</p>
+          <button class="btn btn-primary" id="btnStart">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            Initialize System
+          </button>
         </div>
       </div>
     </section>
 
-    <!-- Log -->
-    <section class="panel">
-      <h3 style="margin-top:0; color:var(--text-muted); font-size:0.9rem;">System Log</h3>
-      <div id="log"></div>
+    <!-- DATA DASHBOARD -->
+    <section class="dashboard">
+      
+      <!-- OBJECT IDENTIFICATION CARD -->
+      <div class="data-card card-object">
+        <div class="card-header">
+          <h3>Object Identification</h3>
+          <span class="card-icon">📦</span>
+        </div>
+        <div class="card-body">
+          <div class="metric-group">
+            <span class="metric-label">Detected Object</span>
+            <span class="metric-value" id="objectName">Scanning...</span>
+          </div>
+          <div class="metric-group">
+            <span class="metric-label">Estimated Distance</span>
+            <span class="metric-value highlight" id="objectDistance">-- cm</span>
+          </div>
+          <div class="metric-group">
+            <span class="metric-label">Confidence Score</span>
+            <span class="metric-value" id="objectScore">0%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TEXT RECOGNITION CARD -->
+      <div class="data-card card-ocr">
+        <div class="card-header">
+          <h3>Text Recognition (OCR)</h3>
+          <span class="card-icon">🔤</span>
+        </div>
+        <div class="card-body">
+          <div class="metric-group full-width">
+            <span class="metric-label">Extracted Text</span>
+            <p class="ocr-text" id="ocrText">Waiting for target...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTROLS CARD -->
+      <div class="data-card card-controls">
+        <div class="card-header">
+          <h3>Control Panel</h3>
+        </div>
+        <div class="controls-grid">
+          <button class="btn btn-ghost" id="btnToggleVision">Vision: OFF</button>
+          <button class="btn btn-ghost" id="btnToggleAudio">Audio: ON</button>
+          <button class="btn btn-ghost" id="btnScan">Manual Scan</button>
+        </div>
+      </div>
+
     </section>
+
+    <!-- SYSTEM LOG -->
+    <section class="log-panel">
+      <div class="log-header">
+        <h3>System Console</h3>
+        <button class="btn-clear" id="btnClearLog">Clear</button>
+      </div>
+      <div id="logContainer" class="log-entries"></div>
+    </section>
+
   </main>
 
-  <script>
-    // --- CONFIGURATION ---
-    const CONFIG = {
-      // Real-world heights for distance estimation (in cm)
-      // COCO classes: https://github.com/tensorflow/tfjs-models/blob/master/coco-ssd/src/classes.ts
-      knownHeights: {
-        'person': 170,
-        'cell phone': 15,
-        'laptop': 25,
-        'keyboard': 5,
-        'mouse': 4,
-        'cup': 12,
-        'bottle': 22,
-        'book': 25,
-        'chair': 90,
-        'tv': 60,
-        'remote': 18
-      },
-      defaultHeight: 20, // Default height if object unknown
-      focalLength: 600,  // Approximate webcam focal length (needs calibration for precision)
-      scanInterval: 2500 // How often to speak/read text
-    };
-
-    // --- STATE ---
-    const state = {
-      model: null,
-      isRunning: false,
-      isAuto: false,
-      isMuted: false,
-      lastSpoken: 0
-    };
-
-    // --- ELEMENTS ---
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('overlay');
-    const ctx = canvas.getContext('2d');
-    const logEl = document.getElementById('log');
-    const statusBar = document.getElementById('statusBar');
-    
-    const objNameEl = document.getElementById('objName');
-    const objDistEl = document.getElementById('objDist');
-    const textReadEl = document.getElementById('textRead');
-
-    // --- UTILITIES ---
-    function log(msg, highlight = false) {
-      const div = document.createElement('div');
-      div.className = 'log-entry';
-      div.innerHTML = `<span style="opacity:0.5">[${new Date().toLocaleTimeString()}]</span> ${msg}`;
-      if(highlight) div.classList.add('log-highlight');
-      logEl.prepend(div);
-    }
-
-    function speak(text) {
-      if (state.isMuted || !text) return;
-      if (Date.now() - state.lastSpoken < CONFIG.scanInterval) return; // Throttle
-      
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      window.speechSynthesis.speak(u);
-      state.lastSpoken = Date.now();
-    }
-
-    // --- CORE LOGIC ---
-
-    async function setupCamera() {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: false
-      });
-      video.srcObject = stream;
-      return new Promise(resolve => {
-        video.onloadedmetadata = () => {
-          video.play();
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          resolve();
-        };
-      });
-    }
-
-    async function loadModels() {
-      statusBar.textContent = "Loading AI Models...";
-      log("Loading COCO-SSD (Object Detection)...");
-      state.model = await cocoSsd.load();
-      log("Models Ready.", true);
-      statusBar.textContent = "AI Ready";
-    }
-
-    // Calculate Distance
-    function getDistance(object) {
-      const realHeight = CONFIG.knownHeights[object.class] || CONFIG.defaultHeight;
-      // Distance = (Real Height * Focal Length) / Pixel Height
-      const distance = (realHeight * CONFIG.focalLength) / object.bbox[3];
-      return Math.round(distance);
-    }
-
-    // Draw Box
-    function drawBox(pred, color, label) {
-      const [x, y, width, height] = pred.bbox;
-      
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 3;
-      ctx.strokeRect(x, y, width, height);
-
-      ctx.fillStyle = color;
-      ctx.fillRect(x, y - 25, width, 25);
-
-      ctx.fillStyle = '#000';
-      ctx.font = '16px Arial';
-      ctx.fillText(label, x + 5, y - 7);
-    }
-
-    // --- TEXT RECOGNITION (OCR) ---
-    async function readText(cropArea) {
-      try {
-        // Create a temporary canvas for the cropped area
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = cropArea.width;
-        tempCanvas.height = cropArea.height;
-        const tempCtx = tempCanvas.getContext('2d');
-        
-        // Draw the specific region
-        tempCtx.drawImage(video, cropArea.x, cropArea.y, cropArea.width, cropArea.height, 0, 0, cropArea.width, cropArea.height);
-        
-        // Run Tesseract
-        const result = await Tesseract.recognize(tempCanvas, 'eng', { 
-          logger: m => { /* console.log(m); */ } 
-        });
-
-        return result.data.text.trim();
-      } catch (e) {
-        console.error("OCR Error", e);
-        return "";
-      }
-    }
-
-    // --- MAIN DETECTION LOOP ---
-    async function detectLoop() {
-      if (!state.isRunning) return;
-
-      // Clear canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // 1. Object Detection
-      const predictions = await state.model.detect(video);
-      
-      let topObject = null;
-      if (predictions.length > 0) {
-        topObject = predictions.reduce((a, b) => (a.score > b.score ? a : b));
-        
-        const dist = getDistance(topObject);
-        const label = `${topObject.class} | ${dist} cm`;
-        
-        // Draw Object Box (Cyan)
-        drawBox(topObject, '#00f2ff', label);
-
-        // Update UI
-        objNameEl.textContent = topObject.class;
-        objDistEl.textContent = `Distance: ~${dist} cm`;
-      } else {
-        objNameEl.textContent = "None";
-        objDistEl.textContent = "Distance: --";
-      }
-
-      // 2. Text Reading (Only run occasionally or on top object to save performance)
-      // We run OCR on the largest detected object region if available, or center of screen
-      if (topObject && topObject.score > 0.6) {
-        // Expand box slightly for better OCR context
-        const pad = 10;
-        const crop = {
-          x: Math.max(0, topObject.bbox[0] - pad),
-          y: Math.max(0, topObject.bbox[1] - pad),
-          width: topObject.bbox[2] + (pad * 2),
-          height: topObject.bbox[3] + (pad * 2)
-        };
-
-        // Draw Text Scan Area (Green Overlay)
-        ctx.strokeStyle = '#00ff9d';
-        ctx.setLineDash([5, 5]);
-        ctx.strokeRect(crop.x, crop.y, crop.width, crop.height);
-        ctx.setLineDash([]);
-
-        // Run OCR (Throttled internally by speech, but visually updated)
-        const text = await readText(crop);
-        
-        if (text && text.length > 1) {
-          textReadEl.textContent = text;
-          drawBox(topObject, '#00ff9d', `Text: ${text.substring(0, 15)}...`);
-          
-          // Speech Logic
-          if (state.isAuto) {
-            speak(`I see a ${topObject.class} at ${dist} centimeters. It says ${text}`);
-          }
-        } else {
-          textReadEl.textContent = "No clear text";
-          if (state.isAuto && topObject) {
-            speak(`I see a ${topObject.class} at ${dist} centimeters.`);
-          }
-        }
-      }
-
-      // Continue loop
-      if (state.isAuto) {
-        requestAnimationFrame(detectLoop);
-      }
-    }
-
-    // --- EVENTS ---
-    document.getElementById('btnStart').addEventListener('click', async () => {
-      document.getElementById('startOverlay').style.display = 'none';
-      await setupCamera();
-      await loadModels();
-      state.isRunning = true;
-      log("System Started.");
-    });
-
-    document.getElementById('btnScan').addEventListener('click', () => {
-      if (!state.model) return;
-      state.isAuto = false;
-      document.getElementById('btnVision').innerText = "Auto Vision: OFF";
-      detectLoop(); // Run once
-      log("Single Scan Executed.");
-    });
-
-    document.getElementById('btnVision').addEventListener('click', () => {
-      state.isAuto = !state.isAuto;
-      document.getElementById('btnVision').innerText = state.isAuto ? "Auto Vision: ON" : "Auto Vision: OFF";
-      
-      if (state.isAuto) {
-        log("Continuous Vision Engaged.", true);
-        detectLoop();
-      } else {
-        log("Continuous Vision Stopped.");
-      }
-    });
-
-    document.getElementById('btnMute').addEventListener('click', () => {
-      state.isMuted = !state.isMuted;
-      document.getElementById('btnMute').innerText = state.isMuted ? "Audio: OFF" : "Audio: ON";
-      log(state.isMuted ? "Audio Muted" : "Audio Activated");
-    });
-
-  </script>
+  <!-- EXTERNAL LOGIC -->
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>
